@@ -1,7 +1,6 @@
 # Fleet CAN-bus Telemetry Pipeline
 
-<!-- TODO: replace <YOUR_USERNAME>/fleet-canbus once GitHub repo is created -->
-[![CI](https://github.com/<YOUR_USERNAME>/fleet-canbus/actions/workflows/ci.yml/badge.svg)](https://github.com/<YOUR_USERNAME>/fleet-canbus/actions/workflows/ci.yml)
+[![CI](https://github.com/This-is-joejoe/fleet-canbus/actions/workflows/ci.yml/badge.svg)](https://github.com/This-is-joejoe/fleet-canbus/actions/workflows/ci.yml)
 
 Real-time CAN-bus telemetry pipeline simulating a fleet of battery-powered devices. Synthetic CAN frames → MQTT broker → time-series database → Grafana dashboards + alerting.
 
