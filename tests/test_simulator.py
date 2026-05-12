@@ -69,3 +69,21 @@ def test_encoded_frames_decode_back_to_close_values():
     decoded = sim.db.decode_message(0x100, bytes.fromhex(pack["data"]))
     # SOC has factor 1 → expect ≤1% rounding
     assert abs(decoded["SOC"] - sim.state.soc) <= 1.0
+
+
+def test_signals_snapshot_returns_decoded_engineering_values():
+    sim = BatterySimulator(device_id="dev-1", seed=42)
+    sim.step(dt=1.0)
+
+    snap = sim.signals_snapshot()
+
+    assert set(snap.keys()) == {
+        "SOC", "Voltage_Pack", "Current",
+        "Temp_Max", "Temp_Min", "Temp_Avg",
+        "Pack_Health", "Fault_Flags", "cell_voltages",
+    }
+    assert isinstance(snap["SOC"], float)
+    assert isinstance(snap["Fault_Flags"], int)
+    assert isinstance(snap["cell_voltages"], list)
+    assert len(snap["cell_voltages"]) == 16
+    assert all(isinstance(v, float) for v in snap["cell_voltages"])

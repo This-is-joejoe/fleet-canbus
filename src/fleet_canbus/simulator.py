@@ -156,6 +156,25 @@ class BatterySimulator:
             "data": data.hex(),
         }
 
+    def signals_snapshot(self) -> dict:
+        """Return current battery state as a flat dict of decoded signal values.
+
+        Cloud-side MQTT payload uses engineering units, not raw CAN bytes —
+        this method is the device-side equivalent of cantools decode.
+        """
+        s = self.state
+        return {
+            "SOC": s.soc,
+            "Voltage_Pack": s.voltage_pack,
+            "Current": s.current,
+            "Temp_Max": s.temp_max,
+            "Temp_Min": s.temp_min,
+            "Temp_Avg": s.temp_avg,
+            "Pack_Health": s.pack_health,
+            "Fault_Flags": s.fault_flags,
+            "cell_voltages": list(s.cell_voltages),
+        }
+
 
 def _clamp(value: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, value))
