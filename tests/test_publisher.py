@@ -5,12 +5,22 @@ from unittest.mock import MagicMock
 from fleet_canbus.publisher import MqttPublisher
 
 
-def test_publish_uses_correct_topic_and_payload():
+def test_publish_signals_uses_correct_topic_and_payload():
     pub = MqttPublisher("localhost")
     pub.client = MagicMock()
-    frames = [{"arbitration_id": 256, "name": "BMS_Pack_Status", "data": "00ff"}]
+    signals = {
+        "SOC": 95.2,
+        "Voltage_Pack": 398.5,
+        "Current": -12.3,
+        "Temp_Max": 31.1,
+        "Temp_Min": 28.4,
+        "Temp_Avg": 29.8,
+        "Pack_Health": 99.0,
+        "Fault_Flags": 0,
+        "cell_voltages": [3.7] * 16,
+    }
 
-    pub.publish_frames("device-007", frames)
+    pub.publish_signals("device-007", signals)
 
     pub.client.publish.assert_called_once()
     call_args, call_kwargs = pub.client.publish.call_args
@@ -21,13 +31,13 @@ def test_publish_uses_correct_topic_and_payload():
 
     parsed = json.loads(payload)
     assert parsed["device_id"] == "device-007"
-    assert parsed["frames"] == frames
+    assert parsed["signals"] == signals
     assert isinstance(parsed["ts_ms"], int)
 
 
-def test_publish_respects_custom_qos():
+def test_publish_signals_respects_custom_qos():
     pub = MqttPublisher("localhost")
     pub.client = MagicMock()
-    pub.publish_frames("dev", [], qos=0)
+    pub.publish_signals("dev", {"SOC": 50.0}, qos=0)
     _, call_kwargs = pub.client.publish.call_args
     assert call_kwargs.get("qos") == 0
