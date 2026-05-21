@@ -23,6 +23,7 @@ dev = [
 
 [project.scripts]
 fleet-sim = "fleet_canbus.cli:main"
+fleet-sub = "fleet_subscriber.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
