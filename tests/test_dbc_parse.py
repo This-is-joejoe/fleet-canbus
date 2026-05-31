@@ -1,9 +1,9 @@
 """DBC sanity tests — guards against accidental signal-definition breakage."""
-from pathlib import Path
-
 import cantools
 
-DBC_PATH = Path(__file__).resolve().parent.parent / "dbc" / "battery_fleet.dbc"
+from fleet_canbus.simulator import DEFAULT_DBC_PATH
+
+DBC_PATH = DEFAULT_DBC_PATH
 
 
 def test_dbc_loads_without_error():

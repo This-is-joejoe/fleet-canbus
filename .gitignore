@@ -17,3 +17,8 @@ mosquitto/log/
 .DS_Store
 .vscode/
 .idea/
+
+# Personal working / planning docs — translate to English and commit later
+docs/week*-concepts.md
+docs/week*-design.md
+docs/week*-plan.md

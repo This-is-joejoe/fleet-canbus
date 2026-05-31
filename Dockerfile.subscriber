@@ -3,10 +3,10 @@ FROM python:3.11-slim
 WORKDIR /app
 
 COPY pyproject.toml ./
-COPY src/fleet_canbus ./src/fleet_canbus
+COPY src/fleet_subscriber ./src/fleet_subscriber
 
 RUN pip install --no-cache-dir .
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "-m", "fleet_canbus.cli"]
+CMD ["python", "-m", "fleet_subscriber.cli"]

@@ -76,9 +76,9 @@ def main() -> None:
     try:
         while not stop:
             sim.step(dt=interval)
-            frames = sim.encode_frames()
-            pub.publish_frames(args.device_id, frames)
-            msg_count += len(frames)
+            signals = sim.signals_snapshot()
+            pub.publish_signals(args.device_id, signals)
+            msg_count += 1
             if args.duration and time.monotonic() - start >= args.duration:
                 break
             time.sleep(interval)

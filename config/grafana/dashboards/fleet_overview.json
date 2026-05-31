@@ -1,0 +1,74 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Online Devices (last 30s)",
+      "datasource": {"type": "postgres", "uid": "TimescaleDB"},
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT COUNT(DISTINCT device_id) AS online FROM battery_telemetry WHERE time > NOW() - INTERVAL '30 seconds'"
+        }
+      ],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Fleet Avg SOC (1-min rollup)",
+      "datasource": {"type": "postgres", "uid": "TimescaleDB"},
+      "gridPos": {"h": 10, "w": 18, "x": 6, "y": 0},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT bucket AS time, device_id AS metric, avg_soc AS value FROM telemetry_1min WHERE $__timeFilter(bucket) ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "type": "heatmap",
+      "title": "Peak Temperature by Device",
+      "datasource": {"type": "postgres", "uid": "TimescaleDB"},
+      "gridPos": {"h": 10, "w": 12, "x": 0, "y": 10},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT bucket AS time, device_id AS metric, peak_temp AS value FROM telemetry_1min WHERE $__timeFilter(bucket) ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Fault Events (any_fault > 0)",
+      "datasource": {"type": "postgres", "uid": "TimescaleDB"},
+      "gridPos": {"h": 10, "w": 12, "x": 12, "y": 10},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT bucket AS time, device_id AS metric, any_fault AS value FROM telemetry_1min WHERE $__timeFilter(bucket) AND any_fault > 0 ORDER BY 1"
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["fleet", "battery"],
+  "templating": {"list": []},
+  "time": {"from": "now-15m", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "Fleet Overview",
+  "uid": "fleet-overview",
+  "version": 1,
+  "weekStart": ""
+}

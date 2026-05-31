@@ -8,7 +8,7 @@ from paho.mqtt import client as mqtt_client
 
 
 class MqttPublisher:
-    """Publish JSON-serialized CAN frame batches to `fleet/{device_id}/can`."""
+    """Publish decoded battery signal JSON to `fleet/{device_id}/can`."""
 
     def __init__(
         self,
@@ -33,16 +33,16 @@ class MqttPublisher:
         self.client.loop_stop()
         self.client.disconnect()
 
-    def publish_frames(
+    def publish_signals(
         self,
         device_id: str,
-        frames: list[dict],
+        signals: dict,
         qos: int = 1,
     ) -> None:
         topic = f"fleet/{device_id}/can"
         payload = json.dumps({
             "device_id": device_id,
             "ts_ms": int(time.time() * 1000),
-            "frames": frames,
+            "signals": signals,
         })
         self.client.publish(topic, payload, qos=qos)
