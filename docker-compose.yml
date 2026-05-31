@@ -67,5 +67,22 @@ services:
       BATCH_SIZE: "500"
       FLUSH_INTERVAL_S: "1.0"
 
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: fleet-grafana
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+
 volumes:
   timescale_data:
+  grafana_data:
