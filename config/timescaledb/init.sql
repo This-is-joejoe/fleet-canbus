@@ -56,7 +56,7 @@ SELECT add_continuous_aggregate_policy('telemetry_1min',
     if_not_exists => TRUE);
 
 SELECT add_continuous_aggregate_policy('telemetry_1hour',
-    start_offset => INTERVAL '2 hours',
-    end_offset   => INTERVAL '10 minutes',
-    schedule_interval => INTERVAL '5 minutes',
+    start_offset => INTERVAL '3 hours',
+    end_offset   => INTERVAL '1 hour',
+    schedule_interval => INTERVAL '1 hour',
     if_not_exists => TRUE);
