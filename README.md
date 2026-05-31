@@ -79,8 +79,8 @@ python -m fleet_canbus.cli --device-id device-001 --rate-hz 10 --duration 30
 
 ```
 .
-├── dbc/battery_fleet.dbc        # CAN signal definitions
 ├── src/fleet_canbus/
+│   ├── dbc/battery_fleet.dbc     # CAN signal definitions (bundled package data)
 │   ├── simulator.py             # Synthetic battery state + CAN frame encoder
 │   ├── publisher.py             # MQTT publisher
 │   └── cli.py                   # Entry point

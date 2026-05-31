@@ -4,7 +4,6 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY src/fleet_canbus ./src/fleet_canbus
-COPY dbc ./dbc
 
 RUN pip install --no-cache-dir .
 

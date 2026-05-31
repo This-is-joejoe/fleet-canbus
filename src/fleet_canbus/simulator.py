@@ -3,12 +3,17 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
+from importlib import resources
 from pathlib import Path
 
 import cantools
 from cantools.database import Database
 
-DEFAULT_DBC_PATH = Path(__file__).resolve().parent.parent.parent / "dbc" / "battery_fleet.dbc"
+# Locate the bundled DBC via importlib.resources so it resolves correctly
+# whether the package is run from source (editable) or installed into
+# site-packages — unlike a __file__-relative path, whose parent depth differs
+# between the repo layout and the installed wheel layout.
+DEFAULT_DBC_PATH = resources.files("fleet_canbus") / "dbc" / "battery_fleet.dbc"
 
 NUM_CELLS = 16
 PACK_CAPACITY_AH = 100.0
