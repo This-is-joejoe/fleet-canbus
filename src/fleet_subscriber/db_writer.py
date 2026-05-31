@@ -6,9 +6,9 @@ import logging
 import queue
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Callable
+from datetime import UTC, datetime
 
 log = logging.getLogger("fleet_subscriber.db_writer")
 
@@ -36,7 +36,7 @@ class Telemetry:
     cell_voltages: list[float]
 
     def to_row(self) -> tuple:
-        ts = datetime.fromtimestamp(self.ts_ms / 1000.0, tz=timezone.utc)
+        ts = datetime.fromtimestamp(self.ts_ms / 1000.0, tz=UTC)
         return (
             ts,
             self.device_id,
