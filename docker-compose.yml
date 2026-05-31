@@ -46,5 +46,26 @@ services:
       timeout: 5s
       retries: 5
 
+  subscriber:
+    build:
+      context: .
+      dockerfile: Dockerfile.subscriber
+    container_name: fleet-subscriber
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      PG_HOST: timescaledb
+      PG_PORT: "5432"
+      PG_DB: fleet
+      PG_USER: fleet
+      PG_PASSWORD: fleet
+      BATCH_SIZE: "500"
+      FLUSH_INTERVAL_S: "1.0"
+
 volumes:
   timescale_data:
