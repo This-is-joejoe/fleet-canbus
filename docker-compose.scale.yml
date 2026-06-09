@@ -1,0 +1,16 @@
+# docker-compose.scale.yml — stress fleet: N devices at 200 Hz.
+# 50 devices x 200 Hz = 10k msg/s aggregate (synthetic stress test, not real traffic).
+#
+# Local stress test (all on one host):
+#   docker compose -f docker-compose.yml -f docker-compose.scale.yml up -d --build --scale simulator=50
+#
+# Distributed (simulators on a separate host, broker elsewhere): override MQTT_HOST
+# with the broker's reachable address, e.g. on the Linux box:
+#   MQTT_HOST=192.168.1.50 docker compose -f docker-compose.yml -f docker-compose.scale.yml up -d --scale simulator=50
+# (Defaults to the in-network "mosquitto" service name for the single-host case.)
+services:
+  simulator:
+    environment:
+      MQTT_HOST: ${MQTT_HOST:-mosquitto}
+      MQTT_PORT: "1883"
+      RATE_HZ: "200"

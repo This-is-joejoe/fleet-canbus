@@ -16,17 +16,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.simulator
-    container_name: fleet-simulator
+    # No container_name / DEVICE_ID: each replica gets a unique docker hostname,
+    # from which the simulator derives its own device id. Scale the fleet with:
+    #   docker compose up --scale simulator=50
     depends_on:
       mosquitto:
         condition: service_healthy
     environment:
       MQTT_HOST: mosquitto
       MQTT_PORT: "1883"
-      DEVICE_ID: device-001
       RATE_HZ: "10"
-    # Week 3: scale via `docker compose up --scale simulator=50`
-    # (will need to drop container_name and randomize DEVICE_ID per replica)
 
   timescaledb:
     image: timescale/timescaledb:latest-pg16
