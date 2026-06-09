@@ -3,6 +3,8 @@ import queue
 import time
 from unittest.mock import MagicMock
 
+from prometheus_client import REGISTRY
+
 from fleet_subscriber.db_writer import DbWriter, Telemetry
 
 
@@ -58,10 +60,29 @@ def test_flush_triggered_by_time():
     writer.stop()
 
     assert cursor.executemany.call_count >= 1
-    _, _ = cursor.executemany.call_args
     args, _ = cursor.executemany.call_args
     _sql, rows = args
     assert len(rows) == 1
+
+
+def test_metrics_count_written_rows_on_flush():
+    q = queue.Queue()
+    conn = MagicMock()
+    conn.cursor.return_value.__enter__.return_value = MagicMock()
+
+    writer = DbWriter(
+        q, conn_factory=lambda: conn, batch_size=3, flush_interval_s=10.0
+    )
+    before = REGISTRY.get_sample_value("telemetry_rows_inserted_total") or 0.0
+    for _ in range(3):
+        q.put(_sample_row())
+
+    writer.start()
+    time.sleep(0.3)
+    writer.stop()
+
+    after = REGISTRY.get_sample_value("telemetry_rows_inserted_total")
+    assert after == before + 3
 
 
 def test_empty_buffer_does_not_flush():

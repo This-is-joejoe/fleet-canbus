@@ -7,6 +7,7 @@ import queue
 
 from paho.mqtt import client as mqtt_client
 
+from . import metrics
 from .db_writer import Telemetry
 
 log = logging.getLogger("fleet_subscriber.subscriber")
@@ -64,10 +65,13 @@ class Subscriber:
                 cell_voltages=[float(v) for v in signals["cell_voltages"]],
             )
         except (ValueError, KeyError, TypeError):
+            metrics.dropped_total.labels(reason="malformed").inc()
             log.warning("dropping malformed payload on %s", msg.topic)
             return
 
         try:
             self.q.put_nowait(item)
+            metrics.messages_total.inc()
         except queue.Full:
+            metrics.dropped_total.labels(reason="queue_full").inc()
             log.warning("queue full; dropping message from %s", item.device_id)

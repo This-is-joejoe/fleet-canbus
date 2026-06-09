@@ -10,6 +10,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from . import metrics
+
 log = logging.getLogger("fleet_subscriber.db_writer")
 
 INSERT_SQL = """
@@ -106,6 +108,7 @@ class DbWriter(threading.Thread):
             commit = getattr(conn, "commit", None)
             if callable(commit):
                 commit()
+            metrics.rows_inserted_total.inc(len(rows))
             log.debug("flushed %d rows", len(rows))
         except Exception:
             log.exception("flush failed; dropping %d rows", len(rows))

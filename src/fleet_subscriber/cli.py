@@ -10,6 +10,7 @@ import time
 
 import psycopg2
 
+from . import metrics
 from .db_writer import DbWriter
 from .subscriber import Subscriber
 
@@ -28,6 +29,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--batch-size", type=int,   default=int(os.getenv("BATCH_SIZE", "500")))
     p.add_argument("--flush-interval", type=float,
                    default=float(os.getenv("FLUSH_INTERVAL_S", "1.0")))
+    p.add_argument("--metrics-port", type=int,
+                   default=int(os.getenv("METRICS_PORT", "8000")),
+                   help="port for the Prometheus /metrics endpoint")
     p.add_argument("-v", "--verbose", action="store_true")
     return p.parse_args()
 
@@ -50,6 +54,9 @@ def main() -> None:
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s %(name)s %(levelname)s %(message)s",
     )
+
+    metrics.start_metrics_server(args.metrics_port)
+    log.info("metrics on :%d/metrics", args.metrics_port)
 
     q: queue.Queue = queue.Queue(maxsize=10000)
     writer = DbWriter(
@@ -76,6 +83,7 @@ def main() -> None:
 
     try:
         while not stop:
+            metrics.queue_depth.set(q.qsize())
             time.sleep(0.5)
     finally:
         sub.stop()
