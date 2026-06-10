@@ -2,12 +2,20 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      mosquitto:
+        image: eclipse-mosquitto:2
+        ports:
+          - 1883:1883
+        options: >-
+          --health-cmd "mosquitto_sub -t '$SYS/#' -C 1 -W 2 || exit 1"
+          --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -23,5 +31,11 @@ jobs:
       - name: Lint
         run: ruff check src tests
 
-      - name: Test
-        run: pytest --cov=fleet_canbus --cov-report=term-missing
+      - name: Test (unit)
+        run: pytest -m "not integration" --cov=fleet_canbus --cov=fleet_subscriber --cov-report=term-missing
+
+      - name: Test (integration)
+        env:
+          MQTT_HOST: localhost
+          MQTT_PORT: "1883"
+        run: pytest -m integration -v
