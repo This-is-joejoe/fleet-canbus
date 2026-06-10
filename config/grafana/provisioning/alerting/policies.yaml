@@ -1,0 +1,6 @@
+# config/grafana/provisioning/alerting/policies.yaml
+apiVersion: 1
+policies:
+  - orgId: 1
+    receiver: ntfy-webhook
+    group_by: ["alertname"]

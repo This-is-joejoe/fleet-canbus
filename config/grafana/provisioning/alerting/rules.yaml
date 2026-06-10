@@ -1,0 +1,36 @@
+# config/grafana/provisioning/alerting/rules.yaml
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: fleet-alerts
+    folder: Fleet
+    interval: 1m
+    rules:
+      - uid: cell-overheat
+        title: Cell Overheat
+        condition: C
+        for: 1m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "A battery cell exceeded 60C in the last 2 minutes"
+        data:
+          - refId: A
+            relativeTimeRange: { from: 120, to: 0 }
+            datasourceUid: TimescaleDB
+            model:
+              refId: A
+              datasource: { type: postgres, uid: TimescaleDB }
+              format: table
+              rawSql: "SELECT max(temp_max) AS peak FROM battery_telemetry WHERE time > now() - interval '2 minutes';"
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource: { type: __expr__, uid: __expr__ }
+              conditions:
+                - evaluator: { type: gt, params: [60] }

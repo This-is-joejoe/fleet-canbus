@@ -1,0 +1,11 @@
+# config/grafana/provisioning/alerting/contact-points.yaml
+apiVersion: 1
+contactPoints:
+  - orgId: 1
+    name: ntfy-webhook
+    receivers:
+      - uid: ntfy_webhook
+        type: webhook
+        settings:
+          url: https://ntfy.sh/fleet-canbus-alerts-981889ca
+          httpMethod: POST
