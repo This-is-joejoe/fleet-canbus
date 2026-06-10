@@ -10,16 +10,21 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from psycopg2.extras import execute_values
+
 from . import metrics
 
 log = logging.getLogger("fleet_subscriber.db_writer")
 
+# execute_values expands a single `%s` into all row tuples, producing one
+# multi-row INSERT (one round-trip) instead of psycopg2's executemany, which
+# issues a separate statement per row.
 INSERT_SQL = """
 INSERT INTO battery_telemetry (
     time, device_id, soc, voltage, current,
     temp_max, temp_min, temp_avg,
     pack_health, fault_flags, cell_voltages
-) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+) VALUES %s
 """
 
 
@@ -104,7 +109,7 @@ class DbWriter(threading.Thread):
         rows = [t.to_row() for t in buffer]
         try:
             with conn.cursor() as cur:
-                cur.executemany(INSERT_SQL, rows)
+                execute_values(cur, INSERT_SQL, rows, page_size=len(rows))
             commit = getattr(conn, "commit", None)
             if callable(commit):
                 commit()
