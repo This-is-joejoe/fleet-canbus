@@ -60,3 +60,8 @@ SELECT add_continuous_aggregate_policy('telemetry_1hour',
     end_offset   => INTERVAL '1 hour',
     schedule_interval => INTERVAL '1 hour',
     if_not_exists => TRUE);
+
+-- Retention: raw 7 days, 1-min rollup 30 days, 1-hour rollup 1 year.
+SELECT add_retention_policy('battery_telemetry', INTERVAL '7 days',   if_not_exists => TRUE);
+SELECT add_retention_policy('telemetry_1min',    INTERVAL '30 days',  if_not_exists => TRUE);
+SELECT add_retention_policy('telemetry_1hour',   INTERVAL '365 days', if_not_exists => TRUE);
