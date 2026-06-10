@@ -1,0 +1,7 @@
+# config/prometheus/prometheus.yml
+global:
+  scrape_interval: 5s
+scrape_configs:
+  - job_name: subscriber
+    static_configs:
+      - targets: ["subscriber:8000"]

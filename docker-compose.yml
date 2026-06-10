@@ -65,6 +65,19 @@ services:
       PG_PASSWORD: fleet
       BATCH_SIZE: "500"
       FLUSH_INTERVAL_S: "1.0"
+    expose:
+      - "8000"
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: fleet-prometheus
+    depends_on:
+      - subscriber
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
 
   grafana:
     image: grafana/grafana:10.4.2
@@ -85,3 +98,4 @@ services:
 volumes:
   timescale_data:
   grafana_data:
+  prometheus_data:
