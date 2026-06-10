@@ -1,0 +1,40 @@
+{
+  "title": "Pipeline Health",
+  "uid": "pipeline-health",
+  "schemaVersion": 39,
+  "time": { "from": "now-15m", "to": "now" },
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Ingest rate (msg/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "rate(telemetry_messages_total[1m])", "legendFormat": "accepted" },
+        { "refId": "B", "expr": "rate(telemetry_rows_inserted_total[1m])", "legendFormat": "inserted" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Queue depth",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "telemetry_queue_depth", "legendFormat": "depth" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Dropped rate",
+      "type": "timeseries",
+      "gridPos": { "h": 9, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "rate(telemetry_dropped_total[1m])", "legendFormat": "{{reason}}" }
+      ]
+    }
+  ]
+}
