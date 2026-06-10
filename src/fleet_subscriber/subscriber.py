@@ -6,6 +6,8 @@ import logging
 import queue
 
 from paho.mqtt import client as mqtt_client
+from paho.mqtt.packettypes import PacketTypes
+from paho.mqtt.properties import Properties
 
 from . import metrics
 from .db_writer import Telemetry
@@ -21,22 +23,33 @@ class Subscriber:
         host: str,
         port: int = 1883,
         out_queue: queue.Queue | None = None,
-        client_id: str = "fleet-subscriber",
+        client_id: str = "fleet-subscriber-main",
         keepalive: int = 30,
+        session_expiry_s: int = 3600,
     ) -> None:
         self.host = host
         self.port = port
         self.keepalive = keepalive
+        self.session_expiry_s = session_expiry_s
         self.q = out_queue if out_queue is not None else queue.Queue(maxsize=10000)
         self.client = mqtt_client.Client(
             mqtt_client.CallbackAPIVersion.VERSION2,
             client_id=client_id,
+            protocol=mqtt_client.MQTTv5,
         )
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
 
     def start(self) -> None:
-        self.client.connect(self.host, self.port, keepalive=self.keepalive)
+        props = Properties(PacketTypes.CONNECT)
+        props.SessionExpiryInterval = self.session_expiry_s
+        self.client.connect(
+            self.host,
+            self.port,
+            keepalive=self.keepalive,
+            clean_start=False,
+            properties=props,
+        )
         self.client.loop_start()
 
     def stop(self) -> None:

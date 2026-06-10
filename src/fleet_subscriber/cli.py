@@ -65,7 +65,12 @@ def main() -> None:
         batch_size=args.batch_size,
         flush_interval_s=args.flush_interval,
     )
-    sub = Subscriber(args.mqtt_host, args.mqtt_port, out_queue=q)
+    sub = Subscriber(
+        args.mqtt_host,
+        args.mqtt_port,
+        out_queue=q,
+        client_id=os.getenv("SUB_CLIENT_ID", "fleet-subscriber-main"),
+    )
 
     stop = False
 
