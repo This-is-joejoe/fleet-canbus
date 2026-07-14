@@ -23,15 +23,19 @@ live data from a 6-device synthetic fleet. No login prompt, no edit rights.
 Oracle Cloud console → **Compute → Instances → Create instance**:
 
 - **Image:** Canonical Ubuntu 22.04
-- **Shape:** `VM.Standard.A1.Flex` (Ampere ARM). Set **2 OCPU / 12 GB** (or up to
-  4 OCPU / 24 GB — all free). 2/12 is plenty for this stack.
-- **SSH keys:** upload your public key (or let Oracle generate; save the private key).
+- **Shape — two Always-Free options:**
+  - `VM.Standard.A1.Flex` (Ampere **ARM**), **2 OCPU / 12 GB** — comfortable, but
+    frequently capacity-blocked (see gotcha).
+  - `VM.Standard.E2.1.Micro` (AMD **x86**), **1 OCPU / 1 GB** — almost always
+    available and zero arch risk, but 1 GB is tight: **requires swap (step 3b)**
+    and the trimmed 2-device fleet (already the default in the public compose).
+- **SSH keys:** paste your public key (`~/.ssh/id_rsa.pub`).
 - Keep the default VCN (it creates one with a public subnet).
 
-> **Gotcha — "Out of host capacity":** free A1 shapes are often unavailable in a
-> given Availability Domain. If creation fails, retry, switch **Availability
-> Domain** (AD-1/2/3), or try again later. This is the #1 friction point; it is
-> not a mistake on your end.
+> **Gotcha — "Out of host capacity":** free **A1** shapes are often unavailable in
+> a given Availability Domain. Retry, switch **Availability Domain** (AD-1/2/3),
+> shrink to 1 OCPU / 6 GB, or fall back to **E2.1.Micro** (x86, always available).
+> This is the #1 friction point; it is not a mistake on your end.
 
 Note the instance's **public IP** once it's running.
 
@@ -79,7 +83,26 @@ newgrp docker    # or log out/in so group membership applies
 docker compose version   # confirm the compose plugin is present
 ```
 
-The convenience script installs the arm64 build automatically.
+The convenience script installs the right build (arm64 or x86) automatically.
+
+---
+
+## 3b. Add swap (required on the 1 GB E2.1.Micro; skip on A1)
+
+1 GB RAM is too little to run the full stack safely. A 2 GB swap file makes it
+comfortable for this low-traffic demo:
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab   # persist across reboots
+free -h                                                       # confirm 2Gi swap
+```
+
+The public compose already trims the fleet to 2 simulators and caps Prometheus
+retention at 3h for this box; bump `SIM_REPLICAS` in `.env` on a bigger instance.
 
 ---
 

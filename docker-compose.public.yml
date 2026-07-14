@@ -26,10 +26,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.simulator
-    # Small always-on fleet: 6 devices at 10 Hz = 60 msg/s. Trivial load, and
-    # retention policies (raw 7d) keep disk bounded so the free box runs forever.
+    # Small always-on fleet. Default 2 devices (fits a 1 GB Always-Free micro);
+    # override with SIM_REPLICAS in .env on a larger box. 10 Hz each = trivial
+    # load, and retention policies (raw 7d) keep disk bounded indefinitely.
     deploy:
-      replicas: 6
+      replicas: ${SIM_REPLICAS:-2}
     depends_on:
       mosquitto:
         condition: service_healthy
@@ -82,6 +83,12 @@ services:
     container_name: fleet-prometheus
     depends_on:
       - subscriber
+    # Cap retention to 3h — Prometheus only feeds the live throughput panels, so
+    # it stays tiny on a 1 GB box.
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=3h"
     volumes:
       - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
