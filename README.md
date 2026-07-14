@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/This-is-joejoe/fleet-canbus/actions/workflows/ci.yml/badge.svg)](https://github.com/This-is-joejoe/fleet-canbus/actions/workflows/ci.yml)
 
+**Live demo:** [fleet-canbus.duckdns.org](https://fleet-canbus.duckdns.org) — anonymous, read-only Grafana on a live synthetic fleet (hardened deployment on Oracle Cloud free tier).
+
 Real-time CAN-bus telemetry pipeline simulating a fleet of battery-powered devices. Synthetic CAN frames → MQTT broker → time-series database → Grafana dashboards + alerting, with Prometheus observability, data retention, and proven zero-loss delivery across subscriber restarts.
 
 ---
