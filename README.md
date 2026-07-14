@@ -4,34 +4,27 @@
 
 Real-time CAN-bus telemetry pipeline simulating a fleet of battery-powered devices. Synthetic CAN frames → MQTT broker → time-series database → Grafana dashboards + alerting, with Prometheus observability, data retention, and proven zero-loss delivery across subscriber restarts.
 
-> Part of the `battery-platform` portfolio. See `../soh-model/` for the ML analytics layer.
-
 ---
 
 ## Architecture
 
-```
-                                    scrape /metrics
-                            ┌───────────────────────────┐
-                            ▼                           │
-┌──────────────┐   ┌────────────┐   ┌──────────────────┐   ┌──────────────┐
-│  CAN sources │──▶│  Mosquitto │──▶│ Subscriber       │──▶│ TimescaleDB  │
-│  (synthetic  │MQTT│  (broker,  │MQTT│  paho callback   │SQL│  hypertable +│
-│   battery    │QoS1│  persistent│QoS1│  → queue → batch │   │  continuous  │
-│   fleet,     │   │  sessions) │   │  execute_values  │   │  aggregates  │
-│  --scale N)  │   └────────────┘   └──────────────────┘   └──────┬───────┘
-└──────────────┘                            │ :8000              │ SQL
-                                            ▼                    ▼
-                                     ┌────────────┐       ┌──────────────┐
-                                     │ Prometheus │       │   Grafana    │
-                                     │  (scrape)  │──────▶│  dashboards  │
-                                     └────────────┘       │  + alerting  │
-                                                          └──────┬───────┘
-                                                                 │ webhook (overheat > 60°C)
-                                                                 ▼
-                                                            ┌─────────┐
-                                                            │ ntfy.sh │
-                                                            └─────────┘
+```mermaid
+flowchart LR
+    CAN["CAN sources<br/>synthetic battery fleet<br/>(--scale N)"]
+    MQ["Mosquitto<br/>broker · persistent sessions"]
+    SUB["Subscriber<br/>paho callback → queue<br/>→ batch execute_values"]
+    TSDB[("TimescaleDB<br/>hypertable +<br/>continuous aggregates")]
+    PROM["Prometheus"]
+    GRAF["Grafana<br/>dashboards + alerting"]
+    NTFY["ntfy.sh"]
+
+    CAN -- "MQTT QoS 1" --> MQ
+    MQ -- "MQTT QoS 1" --> SUB
+    SUB -- "batch SQL insert" --> TSDB
+    SUB -- "/metrics :8000" --> PROM
+    TSDB -- "SQL" --> GRAF
+    PROM --> GRAF
+    GRAF -- "webhook · overheat &gt; 60°C" --> NTFY
 ```
 
 Eight services run in one Docker Compose internal network, addressing each other by service name. Only ports 3000 (Grafana), 9090 (Prometheus), 1883 (MQTT), 5432 (Postgres) are exposed to the host; the subscriber's `/metrics` endpoint is internal-only (`expose: 8000`).
@@ -150,12 +143,31 @@ The test takes the subscriber offline, publishes while it's down, reconnects wit
 
 ---
 
-## Roadmap
+## Deployment
 
-- [x] Week 1: CAN simulator + DBC encoding + MQTT publisher + CI
-- [x] Week 2: TimescaleDB schema + Grafana + continuous aggregates
-- [x] Week 3: Scale to 50 simulators + Prometheus/Grafana observability + overheat alerting + retention + zero-loss reconnect tests
-- [ ] Week 4: FastAPI admin API + deployment + docs
+`docker-compose.public.yml` runs the full stack as a hardened public demo: only
+Caddy is internet-facing (automatic HTTPS via Let's Encrypt), Grafana is exposed
+as **anonymous read-only**, and Postgres/Prometheus/MQTT stay on the internal
+Docker network. Retention policies keep disk bounded so a free-tier box runs
+indefinitely. Full runbook (Oracle Cloud Always Free): [`docs/deployment.md`](docs/deployment.md).
+
+```bash
+docker compose -f docker-compose.public.yml up -d --build
+```
+
+## Status
+
+Complete and running end-to-end:
+
+- CAN/DBC synthetic simulation + MQTT v5 publisher
+- Ingestion: bounded-queue subscriber → batched `execute_values` insert → TimescaleDB hypertable + continuous aggregates + tiered retention
+- Observability: `prometheus-client` metrics → Prometheus → Grafana dashboards
+- Alerting: overheat rule → ntfy.sh webhook
+- Zero-loss delivery across restarts (persistent MQTT v5 session + broker disk persistence), proven by a CI integration test
+- Scale-out to 50 simulators with a documented, defensible throughput analysis
+- Hardened public deployment behind Caddy HTTPS
+
+**Possible extensions:** a FastAPI admin/control-plane API (device registration, health queries); managed cloud infra (RDS/MSK-style) in place of the single-box Compose.
 
 ## Project layout
 
@@ -179,8 +191,11 @@ The test takes the subscriber offline, publishes while it's down, reconnects wit
 │   ├── mosquitto.conf               # broker (persistence enabled)
 │   ├── timescaledb/init.sql         # schema + hypertable + aggregates + retention
 │   ├── prometheus/prometheus.yml    # scrape config
+│   ├── caddy/Caddyfile              # reverse proxy + automatic HTTPS (public deploy)
 │   └── grafana/provisioning/        # datasources, dashboards, alerting (as code)
-├── docker-compose.yml               # full stack
+├── docs/deployment.md               # public deployment runbook (Oracle Cloud)
+├── docker-compose.yml               # full stack (local dev)
 ├── docker-compose.scale.yml         # --scale override for the stress fleet
+├── docker-compose.public.yml        # hardened public deployment (Caddy HTTPS)
 └── .github/workflows/ci.yml         # lint + unit + integration on push/PR
 ```
