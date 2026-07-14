@@ -1,0 +1,6 @@
+# Caddy auto-provisions a Let's Encrypt TLS cert for $SITE_ADDRESS (needs the
+# domain pointing at this host and ports 80/443 reachable), then reverse-proxies
+# all traffic to the internal Grafana. Grafana has no host ports of its own.
+{$SITE_ADDRESS} {
+	reverse_proxy grafana:3000
+}
